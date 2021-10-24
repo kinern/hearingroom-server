@@ -13,6 +13,7 @@ app.use(function (req, res, next) {
 });
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 /* AWS DynamoDB Connection Settings */
 const AWS = require('aws-sdk');
@@ -31,7 +32,7 @@ app.get("/", (req, res) => {
 app.get("/news-reader/all", (req, res) => {
 
   var params = {
-    TableName: tableName, //"news-reader"
+    TableName: "news-reader", //"news-reader"
     Limit: 10
   };
 
@@ -48,6 +49,66 @@ app.get("/news-reader/all", (req, res) => {
   });
 
 });
+
+
+//Get all basic info on people
+app.get("/news-reader/people", (req, res) => {
+
+  var params = {
+    TableName: "news-reader-person", 
+    Limit: 10
+  };
+
+  client.scan(params, (err, data) => {
+    if (err) {
+        console.log(err);
+    } else {
+        var items = [];
+        for (var i in data.Items)
+            items.push(data.Items[i]);
+        res.contentType = 'application/json';
+        res.send(data);
+    }
+  });
+});
+
+
+//Gets all clips related to person given full name.
+app.post("/news-reader/clips", (req, res) => {
+  const fullName = req.body.params.fullName;
+  console.log(req.body);
+  console.log(fullName);
+
+  var params = {
+    TableName: "news-reader-video-clip", 
+    //KeyConditionExpression: 'PersonFullName = :fullName',
+    //ExpressionAttributeValues: {
+    //    ':fullName': {'S': fullName}
+    //},
+    Limit: 10
+  };
+
+  client.scan(params, (err, data) => {
+    if (err) {
+        console.log(err);
+    } else {
+        var items = [];
+        for (var i in data.Items)
+            items.push(data.Items[i]);
+        items = getClipsByFullName(items, fullName);
+        console.log(items);
+        res.contentType = 'application/json';
+        res.send(items);
+    }
+  });
+});
+
+const getClipsByFullName = (items, fullName) => {
+  return items.filter((item)=>{
+    return item.PersonFullName == fullName;
+  });
+}
+
 
 app.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
