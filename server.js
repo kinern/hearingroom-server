@@ -4,6 +4,14 @@ const cors = require("cors");
 require("dotenv").config({ path: "./config.env" });
 const port = process.env.PORT || 5000;
 app.use(cors());
+app.use(function (req, res, next) {
+  //Enabling CORS
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-client-key, x-client-token, x-client-secret, Authorization");
+  next();
+});
+
 app.use(express.json());
 
 /* AWS DynamoDB Connection Settings */
@@ -16,8 +24,6 @@ const tableName = 'news-reader';
 app.get("/", (req, res) => {
   res.json({ message: "The server is running." });
 });
-
-
 
 //Queries... need to seperate out into routes folder
 
@@ -43,8 +49,6 @@ app.get("/news-reader/all", (req, res) => {
 
 });
 
-
 app.listen(port, () => {
-
   console.log(`Server is running on port: ${port}`);
 });
