@@ -26,9 +26,8 @@ app.get("/", (req, res) => {
   res.json({ message: "The server is running." });
 });
 
-//Queries... need to seperate out into routes folder
 
-//Get all records - currently limited to 10...
+/*
 app.get("/news-reader/all", (req, res) => {
 
   var params = {
@@ -47,8 +46,8 @@ app.get("/news-reader/all", (req, res) => {
         res.send(data);
     }
   });
-
 });
+*/
 
 
 //Get all basic info on people
@@ -73,18 +72,61 @@ app.get("/news-reader/people", (req, res) => {
 });
 
 
-//Gets all clips related to person given full name.
+//Scan For Basic Info On Person
+app.get("/news-reader/all-people",(req, res)=> {
+  const params = {        
+      TableName: 'news-reader-people',
+      ExpressionAttributeNames: {
+          "#f": "FullName",
+          "#i": "Info",
+          "#h": "Headshot",
+      },
+      Select: "SPECIFIC_ATTRIBUTES",
+      ProjectionExpression: "#f, #i, #h",
+  };
+  
+  client.scan(params, function(err, data) {
+      if (err) {
+          console.log(err, err.stack);
+      } else {
+          res.contentType = 'application/json';
+          res.send(data);
+      }
+  });
+});
+
+//Details Query For Person
+app.post("/news-reader/person-details", (req, res) => {
+  const fullName = req.body.params.fullName;
+
+  const params = {    
+    TableName: "news-reader-people", 
+    KeyConditionExpression: "#fn = :fullName",
+    ExpressionAttributeNames:{
+      "#fn": "PersonID"
+    },
+    ExpressionAttributeValues: {
+      ":fullName": fullName
+    }
+  };
+
+  client.query(params, function(err, data) {
+    if (err) {
+        console.log(err, err.stack);
+    } else {
+        res.contentType = 'application/json';
+        res.send(data);
+    }
+  });
+
+});
+
+
+//TODO: Remove
 app.post("/news-reader/clips", (req, res) => {
   const fullName = req.body.params.fullName;
-  console.log(req.body);
-  console.log(fullName);
-
   var params = {
     TableName: "news-reader-video-clip", 
-    //KeyConditionExpression: 'PersonFullName = :fullName',
-    //ExpressionAttributeValues: {
-    //    ':fullName': {'S': fullName}
-    //},
     Limit: 10
   };
 
@@ -96,18 +138,20 @@ app.post("/news-reader/clips", (req, res) => {
         for (var i in data.Items)
             items.push(data.Items[i]);
         items = getClipsByFullName(items, fullName);
-        console.log(items);
         res.contentType = 'application/json';
         res.send(items);
     }
   });
 });
 
+
+//TODO: Remove
 const getClipsByFullName = (items, fullName) => {
   return items.filter((item)=>{
     return item.PersonFullName == fullName;
   });
 }
+
 
 
 app.listen(port, () => {
