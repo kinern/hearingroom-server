@@ -50,7 +50,7 @@ app.get("/news-reader/all", (req, res) => {
 */
 
 
-//Get all basic info on people
+//TODO - Remove
 app.get("/news-reader/people", (req, res) => {
 
   var params = {
@@ -75,11 +75,11 @@ app.get("/news-reader/people", (req, res) => {
 //Scan For Basic Info On Person
 app.get("/news-reader/all-people",(req, res)=> {
   const params = {        
-      TableName: 'news-reader-people',
+      TableName: 'hearingroom-people',
       ExpressionAttributeNames: {
-          "#f": "FullName",
-          "#i": "Info",
-          "#h": "Headshot",
+          "#f": "id",
+          "#i": "name",
+          "#h": "headshot",
       },
       Select: "SPECIFIC_ATTRIBUTES",
       ProjectionExpression: "#f, #i, #h",
@@ -97,16 +97,16 @@ app.get("/news-reader/all-people",(req, res)=> {
 
 //Details Query For Person
 app.post("/news-reader/person-details", (req, res) => {
-  const fullName = req.body.params.fullName;
+  const personId = req.body.params.id;
 
   const params = {    
-    TableName: "news-reader-people", 
-    KeyConditionExpression: "#fn = :fullName",
+    TableName: "hearingroom-people", 
+    KeyConditionExpression: "#fn = :id",
     ExpressionAttributeNames:{
-      "#fn": "PersonID"
+      "#fn": "id"
     },
     ExpressionAttributeValues: {
-      ":fullName": fullName
+      ":id": personId
     }
   };
 
